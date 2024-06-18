@@ -1,16 +1,120 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import ActivityServices from '@/services/activity.services';
+import { ActivityList, ActivityResponse } from '@/types/activity.types';
+import { onMounted, ref } from 'vue';
+
+type ActionType = 'All' | 'Active' | 'Completed';
+
+onMounted(() => {
+  getActivityList();
+});
+
+const toDoList = ref<ActivityList[]>([]);
+const actionToShow = ref<ActionType>('All');
+const filteredAction = ref<ActivityList[]>([]);
+
+// Get the activity list from API
+const getActivityList = async (): Promise<void> => {
+  try {
+    const { data } = await ActivityServices.getActivityList(); // Respond from FireBase will always be object
+    const activities: ActivityList[] = [];
+    const activitiesId = data
+      ? (Object.keys(data) as Array<keyof ActivityResponse>)
+      : [];
+
+    activitiesId.forEach((item) => {
+      const toDo = {
+        _id: item.toString(),
+        action: data[item].action,
+        status: data[item].status,
+      };
+
+      activities.unshift(toDo);
+    });
+
+    toDoList.value = activities;
+
+    filterAction('All');
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+// Filter the action
+const filterAction = (type: ActionType): void => {
+  if (type === 'All') {
+    actionToShow.value = 'All';
+    filteredAction.value = toDoList.value;
+  } else if (type === 'Active') {
+    actionToShow.value = 'Active';
+    filteredAction.value = toDoList.value.filter(
+      (item) => item.status === 'Active',
+    );
+  } else {
+    actionToShow.value = 'Completed';
+    filteredAction.value = toDoList.value.filter(
+      (item) => item.status === 'Done',
+    );
+  }
+};
+
+// Edit the status of an activity
+const editAction = async (
+  event: Event,
+  status: 'Done' | 'Active',
+): Promise<void> => {
+  try {
+    const actionName = (event.target as HTMLInputElement).value;
+    const actionId = (event.target as HTMLInputElement).id;
+
+    await ActivityServices.editAction(actionId, {
+      action: actionName,
+      status,
+    });
+
+    await getActivityList();
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+// Delete an action
+const deleteAction = async (
+  isBulk: boolean,
+  actionId?: string,
+): Promise<void> => {
+  try {
+    if (!isBulk) {
+      await ActivityServices.deleteAction(actionId as string);
+    } else {
+      const doneAction = toDoList.value.filter(
+        (item) => item.status === 'Done',
+      );
+      doneAction.forEach(async (item) => {
+        await ActivityServices.deleteAction(item._id);
+      });
+    }
+
+    await getActivityList();
+  } catch (error) {
+    console.log(error);
+  }
+};
+</script>
 <template>
   <div
     class="flex h-fit flex-col gap-[2px] overflow-hidden rounded bg-transparent"
   >
     <!-- Loop here -->
     <div
+      :key="action._id"
+      v-for="action in filteredAction"
       data-section="checkbox-wrapper"
       class="group relative grid w-full grid-cols-6 gap-4 overflow-hidden bg-white px-2 py-4"
     >
       <!-- Name of parent class should be group! That's mandatory from tailwind to activate something in children element -->
       <label
-        for="activity1"
+        :for="action._id"
         class="group relative col-span-5 ms-2 flex cursor-pointer items-center gap-2 text-sm font-medium leading-normal text-very-dark-grayish-blue"
       >
         <!-- Checkbox -->
@@ -18,12 +122,16 @@
           class="flex h-[22px] w-[22px] shrink-0 items-center self-start rounded-full bg-very-light-grayish-blue group-hover:bg-check-bg"
         >
           <input
-            id="activity1"
+            :id="action._id"
+            :checked="action.status === 'Done'"
             type="checkbox"
-            value=""
+            :value="action.action"
+            :name="action._id"
+            @change="
+              editAction($event, action.status === 'Done' ? 'Active' : 'Done')
+            "
             class="peer mx-auto h-5 w-5 shrink-0 cursor-pointer appearance-none rounded-full border-0 bg-white checked:h-[22px] checked:w-[22px] checked:bg-check-bg focus:outline-none focus:ring-offset-0"
           />
-
           <!-- Checkbox icon -->
           <i
             class="fa-solid fa-check pointer-events-none absolute left-[5.5px] top-[5.5px] hidden text-[12px] text-white peer-checked:block"
@@ -31,84 +139,21 @@
         </div>
 
         <!-- text label -->
-        <span class="text-justify text-sm">Makan </span>
-
-        <!-- X mark -->
-      </label>
-      <div class="m-auto h-full w-6">
-        <i class="pi pi-times text-xl font-light text-dark-grayish-blue"></i>
-      </div>
-    </div>
-
-    <div
-      data-section="checkbox-wrapper"
-      class="group relative grid w-full grid-cols-6 gap-4 overflow-hidden bg-white px-2 py-4"
-    >
-      <!-- Name of parent class should be group! That's mandatory from tailwind to activate something in children element -->
-      <label
-        for="activity2"
-        class="group relative col-span-5 ms-2 flex cursor-pointer items-center gap-2 text-sm font-medium leading-normal text-very-dark-grayish-blue"
-      >
-        <!-- Checkbox -->
-        <div
-          class="flex h-[22px] w-[22px] shrink-0 items-center self-start rounded-full bg-very-light-grayish-blue group-hover:bg-check-bg"
+        <span
+          :class="[
+            'text-justify text-sm',
+            { 'text-dark-grayish-blue line-through': action.status === 'Done' },
+          ]"
+          >{{ action.action }}</span
         >
-          <input
-            id="activity2"
-            type="checkbox"
-            value=""
-            class="peer mx-auto h-5 w-5 shrink-0 cursor-pointer appearance-none rounded-full border-0 bg-white checked:h-[22px] checked:w-[22px] checked:bg-check-bg focus:outline-none focus:ring-offset-0"
-          />
-
-          <!-- Checkbox icon -->
-          <i
-            class="fa-solid fa-check pointer-events-none absolute left-[5.5px] top-[5.5px] hidden text-[12px] text-white peer-checked:block"
-          ></i>
-        </div>
-
-        <!-- text label -->
-        <span class="text-justify text-sm">Tidur</span>
 
         <!-- X mark -->
       </label>
       <div class="m-auto h-full w-6">
-        <i class="pi pi-times text-xl font-light text-dark-grayish-blue"></i>
-      </div>
-    </div>
-
-    <div
-      data-section="checkbox-wrapper"
-      class="group relative grid w-full grid-cols-6 gap-4 overflow-hidden bg-white px-2 py-4"
-    >
-      <!-- Name of parent class should be group! That's mandatory from tailwind to activate something in children element -->
-      <label
-        for="act3"
-        class="group relative col-span-5 ms-2 flex cursor-pointer items-center gap-2 text-sm font-medium leading-normal text-very-dark-grayish-blue"
-      >
-        <!-- Checkbox -->
-        <div
-          class="flex h-[22px] w-[22px] shrink-0 items-center self-start rounded-full bg-very-light-grayish-blue group-hover:bg-check-bg"
-        >
-          <input
-            id="act3"
-            type="checkbox"
-            value=""
-            class="peer mx-auto h-5 w-5 shrink-0 cursor-pointer appearance-none rounded-full border-0 bg-white checked:h-[22px] checked:w-[22px] checked:bg-check-bg focus:outline-none focus:ring-offset-0"
-          />
-
-          <!-- Checkbox icon -->
-          <i
-            class="fa-solid fa-check pointer-events-none absolute left-[5.5px] top-[5.5px] hidden text-[12px] text-white peer-checked:block"
-          ></i>
-        </div>
-
-        <!-- text label -->
-        <span class="text-justify text-sm">Main</span>
-
-        <!-- X mark -->
-      </label>
-      <div class="m-auto h-full w-6">
-        <i class="pi pi-times text-xl font-light text-dark-grayish-blue"></i>
+        <i
+          class="pi pi-times text-xl font-light text-dark-grayish-blue"
+          @click="deleteAction(false, action._id)"
+        ></i>
       </div>
     </div>
 
@@ -116,8 +161,11 @@
     <div
       class="flex w-full items-center justify-between bg-white p-4 text-xs tracking-[0.24px] text-dark-grayish-blue"
     >
-      <span>5 items left</span>
-      <span>Clear Completed</span>
+      <span
+        >{{ toDoList.filter((item) => item.status === 'Active').length }} items
+        left</span
+      >
+      <span @click="deleteAction(true)">Clear Completed</span>
     </div>
   </div>
 
@@ -125,10 +173,31 @@
   <div
     class="flex justify-center gap-2 bg-white p-4 font-semibold text-dark-grayish-blue"
   >
-    <span class="text-primary-light-blue hover:text-very-dark-desaturated-blue"
+    <span
+      :class="[
+        { 'text-primary-light-blue': actionToShow === 'All' },
+        { 'hover:text-very-dark-desaturated-blue': actionToShow !== 'All' },
+      ]"
+      @click="filterAction('All')"
       >All</span
     >
-    <span class="hover:text-very-dark-desaturated-blue">Active</span>
-    <span class="hover:text-very-dark-desaturated-blue">Completed</span>
+    <span
+      :class="[
+        { 'text-primary-light-blue': actionToShow === 'Active' },
+        { 'hover:text-very-dark-desaturated-blue': actionToShow !== 'Active' },
+      ]"
+      @click="filterAction('Active')"
+      >Active</span
+    >
+    <span
+      :class="[
+        { 'text-primary-light-blue': actionToShow === 'Completed' },
+        {
+          'hover:text-very-dark-desaturated-blue': actionToShow !== 'Completed',
+        },
+      ]"
+      @click="filterAction('Completed')"
+      >Completed</span
+    >
   </div>
 </template>

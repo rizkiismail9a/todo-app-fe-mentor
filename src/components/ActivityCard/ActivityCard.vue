@@ -1,6 +1,9 @@
 <script setup lang="ts">
-import CreateActivityForm from './CreateActivityForm.vue';
+import { ref } from 'vue';
 import ActivityList from './ActivityList.vue';
+import CreateActivityForm from './CreateActivityForm.vue';
+
+const listKey = ref<number>(0);
 </script>
 <template>
   <div data-section="activity-card" class="flex w-full flex-col gap-10">
@@ -12,8 +15,10 @@ import ActivityList from './ActivityList.vue';
 
     <div class="flex flex-col gap-4">
       <!-- Form -->
-      <CreateActivityForm />
-      <ActivityList />
+      <CreateActivityForm @submit="listKey++" />
+
+      <ActivityList :key="listKey" />
+
       <span class="text-center text-sm tracking-[0.24px] text-dark-grayish-blue"
         >Drag and drop to reorder list</span
       >
