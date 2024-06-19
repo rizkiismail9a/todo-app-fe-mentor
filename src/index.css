@@ -21,3 +21,9 @@ body {
   background-attachment: fixed;
   background-position: center top;
 }
+
+@media screen and (min-width: 375px) {
+  body {
+    background-image: url('/public/images/bg-desktop-light.jpg');
+  }
+}

@@ -100,6 +100,42 @@ const deleteAction = async (
     console.log(error);
   }
 };
+
+// Reorder list
+const reorderList = (event: DragEvent, action: ActivityList, index: number) => {
+  const { dataTransfer } = event;
+  if (dataTransfer) {
+    dataTransfer.dropEffect = 'move';
+    dataTransfer.effectAllowed = 'move';
+    dataTransfer.setData('id', action._id);
+    dataTransfer.setData('index', index.toString());
+  }
+};
+
+// Replace the element into other element
+const replaceAction = (event: DragEvent, list: ActivityList[]) => {
+  try {
+    const { dataTransfer } = event;
+    const eventTarget = event.target as HTMLElement;
+    const dropTarget = eventTarget.closest('label');
+
+    if (dataTransfer) {
+      const draggedIndex = parseInt(dataTransfer.getData('index'));
+      const id = dataTransfer.getData('id');
+      const draggedItem = list.find((item) => item._id === id) as ActivityList;
+      const droppedItem = list.find(
+        (item) => item._id === dropTarget?.id,
+      ) as ActivityList;
+
+      const droppedItemIndex = list.indexOf(droppedItem);
+
+      list.splice(draggedIndex, 1);
+      list.splice(droppedItemIndex, 0, draggedItem);
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
 </script>
 <template>
   <div
@@ -108,14 +144,21 @@ const deleteAction = async (
     <!-- Loop here -->
     <div
       :key="action._id"
-      v-for="action in filteredAction"
+      v-for="(action, index) in filteredAction"
       data-section="checkbox-wrapper"
       class="group relative grid w-full grid-cols-6 gap-4 overflow-hidden bg-white px-2 py-4"
+      @dragover.prevent
+      @drop="replaceAction($event, filteredAction)"
     >
       <!-- Name of parent class should be group! That's mandatory from tailwind to activate something in children element -->
       <label
         :for="action._id"
-        class="group relative col-span-5 ms-2 flex cursor-pointer items-center gap-2 text-sm font-medium leading-normal text-very-dark-grayish-blue"
+        :id="action._id"
+        @dragenter.prevent
+        @dragover.prevent
+        @dragstart="reorderList($event, action, index)"
+        draggable="true"
+        class="group relative col-span-5 ms-2 flex cursor-grab items-center gap-2 text-sm font-medium leading-normal text-very-dark-grayish-blue"
       >
         <!-- Checkbox -->
         <div
@@ -146,12 +189,13 @@ const deleteAction = async (
           ]"
           >{{ action.action }}</span
         >
-
-        <!-- X mark -->
       </label>
+
+      <!-- X mark -->
+      <!-- Delete button -->
       <div class="m-auto h-full w-6">
         <i
-          class="pi pi-times text-xl font-light text-dark-grayish-blue"
+          class="pi pi-times cursor-pointer text-xl font-light text-dark-grayish-blue"
           @click="deleteAction(false, action._id)"
         ></i>
       </div>
