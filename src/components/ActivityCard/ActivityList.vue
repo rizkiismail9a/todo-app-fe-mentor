@@ -12,6 +12,7 @@ onMounted(() => {
 const toDoList = ref<ActivityList[]>([]);
 const actionToShow = ref<ActionType>('All');
 const filteredAction = ref<ActivityList[]>([]);
+const touchTargetId = ref<string>();
 
 // Get the activity list from API
 const getActivityList = async (): Promise<void> => {
@@ -119,8 +120,6 @@ const replaceAction = (event: DragEvent, list: ActivityList[]) => {
     const eventTarget = event.target as HTMLElement;
     const dropTarget = eventTarget.closest('label');
 
-    console.log(dropTarget);
-
     if (dataTransfer) {
       const draggedIndex = parseInt(dataTransfer.getData('index'));
       const id = dataTransfer.getData('id');
@@ -138,6 +137,34 @@ const replaceAction = (event: DragEvent, list: ActivityList[]) => {
     console.log(error);
   }
 };
+
+// Move the element by touching
+const moving = (event: TouchEvent) => {
+  const movingTarget = event.target as HTMLElement;
+  if (movingTarget) {
+    touchTargetId.value = movingTarget.id;
+  }
+};
+
+const drop = (event: TouchEvent, list: ActivityList[]) => {
+  // Can not use current target, it will always return the element user moves, not to move to
+  const dropTarget = document.elementFromPoint(
+    event.changedTouches[0].clientX,
+    event.changedTouches[0].clientY,
+  ) as HTMLElement;
+  const dropTargetId = dropTarget.id;
+  const movingElement = list.find(
+    (item) => item._id === touchTargetId.value,
+  ) as ActivityList;
+  const movingElementIndex = list.indexOf(movingElement);
+  const dropElement = list.find(
+    (item) => item._id === dropTargetId,
+  ) as ActivityList;
+  const dropTargetIndex = list.indexOf(dropElement);
+
+  list.splice(movingElementIndex, 1);
+  list.splice(dropTargetIndex, 0, movingElement);
+};
 </script>
 <template>
   <div
@@ -147,10 +174,13 @@ const replaceAction = (event: DragEvent, list: ActivityList[]) => {
     <div
       :key="action._id"
       v-for="(action, index) in filteredAction"
+      :data-id="action._id"
       data-section="checkbox-wrapper"
-      class="group relative grid w-full grid-cols-6 gap-4 overflow-hidden bg-white px-2 py-4"
+      class="group grid w-full grid-cols-6 gap-4 overflow-hidden bg-white px-2 py-4"
       @dragover.prevent
       @drop="replaceAction($event, filteredAction)"
+      @touchstart="moving"
+      @touchend="drop($event, filteredAction)"
     >
       <!-- Name of parent class should be group! That's mandatory from tailwind to activate something in children element -->
       <label
