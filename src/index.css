@@ -11,19 +11,27 @@ body,
   height: 100%;
   min-height: 100vh;
   width: 100%;
-  background-color: #e5effa;
   font-family: 'Josefin Sans', sans-serif;
+}
+
+.dark body {
+  background-image: url('/public/images/bg-mobile-dark.jpg');
+  background-color: hsl(235, 21%, 11%);
 }
 
 body {
   background-image: url('/public/images/bg-mobile-light.jpg');
   background-size: contain;
+  background-color: #e5effa;
   background-repeat: no-repeat;
   background-attachment: fixed;
   background-position: center top;
 }
 
 @media screen and (min-width: 375px) {
+  .dark body {
+    background-image: url('/public/images/bg-desktop-dark.jpg');
+  }
   body {
     background-image: url('/public/images/bg-desktop-light.jpg');
     min-width: 100vw;

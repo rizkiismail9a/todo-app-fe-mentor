@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import ActivityServices from '@/services/activity.services';
 import { ActivityList, ActivityResponse } from '@/types/activity.types';
-import { nextTick } from 'process';
 import { onMounted, ref } from 'vue';
 
 type ActionType = 'All' | 'Active' | 'Completed';
@@ -182,7 +181,7 @@ const drop = (event: TouchEvent, list: ActivityList[]) => {
       v-for="(action, index) in filteredAction"
       :data-id="action._id"
       data-section="checkbox-wrapper"
-      class="group grid w-full grid-cols-6 gap-4 overflow-hidden bg-white px-2 py-4"
+      class="group grid w-full grid-cols-6 gap-4 overflow-hidden bg-white px-2 py-4 dark:bg-very-dark-desaturated-blue"
       @dragover.prevent
       @drop="replaceAction($event, filteredAction)"
       @touchstart="moving"
@@ -196,11 +195,11 @@ const drop = (event: TouchEvent, list: ActivityList[]) => {
         @dragover.prevent
         @dragstart="reorderList($event, action, index)"
         draggable="true"
-        class="group relative col-span-5 ms-2 flex cursor-grab items-center gap-2 text-sm font-medium leading-normal text-very-dark-grayish-blue"
+        class="group relative col-span-5 ms-2 flex cursor-grab items-center gap-2 text-sm font-medium leading-normal text-very-dark-grayish-blue dark:text-very-light-gray"
       >
         <!-- Checkbox -->
         <div
-          class="flex h-[22px] w-[22px] shrink-0 items-center self-start rounded-full bg-very-light-grayish-blue group-hover:bg-check-bg"
+          class="flex h-[22px] w-[22px] shrink-0 items-center justify-center self-start rounded-full bg-very-light-grayish-blue group-hover:bg-check-bg dark:bg-very-dark-grayish-blue"
         >
           <input
             :id="action._id"
@@ -211,7 +210,7 @@ const drop = (event: TouchEvent, list: ActivityList[]) => {
             @change="
               editAction($event, action.status === 'Done' ? 'Active' : 'Done')
             "
-            class="peer mx-auto h-5 w-5 shrink-0 cursor-pointer appearance-none rounded-full border-0 bg-white checked:h-[22px] checked:w-[22px] checked:bg-check-bg focus:outline-none focus:ring-offset-0"
+            class="peer mx-auto h-5 w-5 shrink-0 cursor-pointer appearance-none rounded-full border-0 bg-white checked:h-[22px] checked:w-[22px] checked:bg-check-bg focus:outline-none focus:ring-offset-0 dark:bg-very-dark-desaturated-blue"
           />
           <!-- Checkbox icon -->
           <i
@@ -231,7 +230,7 @@ const drop = (event: TouchEvent, list: ActivityList[]) => {
 
       <!-- X mark -->
       <!-- Delete button -->
-      <div class="m-auto h-full w-6">
+      <div class="m-auto flex h-full w-6 justify-center">
         <i
           class="pi pi-times cursor-pointer text-xl font-light text-dark-grayish-blue"
           @click="deleteAction(false, action._id)"
@@ -241,19 +240,22 @@ const drop = (event: TouchEvent, list: ActivityList[]) => {
 
     <!-- Footer feature -->
     <div
-      class="flex w-full items-center justify-between bg-white p-4 text-xs tracking-[0.24px] text-dark-grayish-blue"
+      class="flex w-full items-center justify-between bg-white p-4 text-xs tracking-[0.24px] text-dark-grayish-blue dark:bg-very-dark-desaturated-blue"
     >
       <span>
         {{ toDoList.filter((item) => item.status === 'Active').length }} items
         left
       </span>
       <div
-        class="hidden cursor-pointer justify-center gap-2 bg-white p-4 font-semibold text-dark-grayish-blue sm:flex"
+        class="hidden cursor-pointer justify-center gap-2 p-4 font-semibold text-dark-grayish-blue sm:flex sm:py-1"
       >
         <span
           :class="[
             { 'text-primary-light-blue': actionToShow === 'All' },
-            { 'hover:text-very-dark-desaturated-blue': actionToShow !== 'All' },
+            {
+              'hover:text-very-dark-desaturated-blue dark:hover:text-very-light-gray':
+                actionToShow !== 'All',
+            },
           ]"
           @click="filterAction('All')"
           >All</span
@@ -262,7 +264,7 @@ const drop = (event: TouchEvent, list: ActivityList[]) => {
           :class="[
             { 'text-primary-light-blue': actionToShow === 'Active' },
             {
-              'hover:text-very-dark-desaturated-blue':
+              'hover:text-very-dark-desaturated-blue dark:hover:text-very-light-gray':
                 actionToShow !== 'Active',
             },
           ]"
@@ -273,7 +275,7 @@ const drop = (event: TouchEvent, list: ActivityList[]) => {
           :class="[
             { 'text-primary-light-blue': actionToShow === 'Completed' },
             {
-              'hover:text-very-dark-desaturated-blue':
+              'hover:text-very-dark-desaturated-blue dark:hover:text-very-light-gray':
                 actionToShow !== 'Completed',
             },
           ]"
@@ -287,14 +289,17 @@ const drop = (event: TouchEvent, list: ActivityList[]) => {
     </div>
   </div>
 
-  <!-- Filter feature -->
+  <!-- Filter feature for mobile only -->
   <div
-    class="flex justify-center gap-2 bg-white p-4 font-semibold text-dark-grayish-blue sm:hidden"
+    class="flex justify-center gap-2 bg-white p-4 font-semibold text-dark-grayish-blue sm:hidden dark:bg-very-dark-desaturated-blue"
   >
     <span
       :class="[
         { 'text-primary-light-blue': actionToShow === 'All' },
-        { 'hover:text-very-dark-desaturated-blue': actionToShow !== 'All' },
+        {
+          'hover:text-very-dark-desaturated-blue dark:hover:text-very-light-gray':
+            actionToShow !== 'All',
+        },
       ]"
       @click="filterAction('All')"
       >All</span
@@ -303,7 +308,8 @@ const drop = (event: TouchEvent, list: ActivityList[]) => {
       :class="[
         { 'text-primary-light-blue': actionToShow === 'Active' },
         {
-          'hover:text-very-dark-desaturated-blue': actionToShow !== 'Active',
+          'hover:text-very-dark-desaturated-blue dark:hover:text-very-light-gray':
+            actionToShow !== 'Active',
         },
       ]"
       @click="filterAction('Active')"
@@ -313,7 +319,8 @@ const drop = (event: TouchEvent, list: ActivityList[]) => {
       :class="[
         { 'text-primary-light-blue': actionToShow === 'Completed' },
         {
-          'hover:text-very-dark-desaturated-blue': actionToShow !== 'Completed',
+          'hover:text-very-dark-desaturated-blue dark:hover:text-very-light-gray':
+            actionToShow !== 'Completed',
         },
       ]"
       @click="filterAction('Completed')"

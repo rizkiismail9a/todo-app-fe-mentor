@@ -25,13 +25,18 @@ const createNewAction = async (): Promise<void> => {
 </script>
 
 <template>
-  <form class="w-full rounded bg-white p-4" @submit.prevent="createNewAction">
+  <form
+    class="w-full rounded bg-white p-4 dark:bg-very-dark-desaturated-blue"
+    @submit.prevent="createNewAction"
+  >
     <div class="flex w-full items-center gap-2">
-      <div class="h-[22px] w-[22px] shrink-0 rounded-full border" />
+      <div
+        class="h-[22px] w-[22px] shrink-0 rounded-full border dark:border-very-dark-grayish-blue"
+      />
       <input
         type="text"
         v-model="typedAction"
-        class="text-sm text-very-dark-grayish-blue focus:outline-none"
+        class="bg-transparent text-sm text-very-dark-grayish-blue focus:outline-none dark:text-very-light-gray"
         placeholder="Create a new todo..."
       />
     </div>
