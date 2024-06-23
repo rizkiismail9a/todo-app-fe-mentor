@@ -28,6 +28,9 @@ export default {
         desktop: '1440px',
       },
     },
+    screens: {
+      sm: '375px',
+    },
   },
   plugins: [],
 };

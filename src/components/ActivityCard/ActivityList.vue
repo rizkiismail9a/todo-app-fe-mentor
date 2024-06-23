@@ -119,6 +119,8 @@ const replaceAction = (event: DragEvent, list: ActivityList[]) => {
     const eventTarget = event.target as HTMLElement;
     const dropTarget = eventTarget.closest('label');
 
+    console.log(dropTarget);
+
     if (dataTransfer) {
       const draggedIndex = parseInt(dataTransfer.getData('index'));
       const id = dataTransfer.getData('id');
@@ -139,7 +141,7 @@ const replaceAction = (event: DragEvent, list: ActivityList[]) => {
 </script>
 <template>
   <div
-    class="flex h-fit flex-col gap-[2px] overflow-hidden rounded bg-transparent"
+    class="flex h-fit flex-col gap-[2px] overflow-hidden rounded bg-transparent sm:gap-[1px]"
   >
     <!-- Loop here -->
     <div
@@ -205,17 +207,51 @@ const replaceAction = (event: DragEvent, list: ActivityList[]) => {
     <div
       class="flex w-full items-center justify-between bg-white p-4 text-xs tracking-[0.24px] text-dark-grayish-blue"
     >
-      <span
-        >{{ toDoList.filter((item) => item.status === 'Active').length }} items
-        left</span
+      <span>
+        {{ toDoList.filter((item) => item.status === 'Active').length }} items
+        left
+      </span>
+      <div
+        class="hidden cursor-pointer justify-center gap-2 bg-white p-4 font-semibold text-dark-grayish-blue sm:flex"
       >
+        <span
+          :class="[
+            { 'text-primary-light-blue': actionToShow === 'All' },
+            { 'hover:text-very-dark-desaturated-blue': actionToShow !== 'All' },
+          ]"
+          @click="filterAction('All')"
+          >All</span
+        >
+        <span
+          :class="[
+            { 'text-primary-light-blue': actionToShow === 'Active' },
+            {
+              'hover:text-very-dark-desaturated-blue':
+                actionToShow !== 'Active',
+            },
+          ]"
+          @click="filterAction('Active')"
+          >Active</span
+        >
+        <span
+          :class="[
+            { 'text-primary-light-blue': actionToShow === 'Completed' },
+            {
+              'hover:text-very-dark-desaturated-blue':
+                actionToShow !== 'Completed',
+            },
+          ]"
+          @click="filterAction('Completed')"
+          >Completed</span
+        >
+      </div>
       <span @click="deleteAction(true)">Clear Completed</span>
     </div>
   </div>
 
   <!-- Filter feature -->
   <div
-    class="flex justify-center gap-2 bg-white p-4 font-semibold text-dark-grayish-blue"
+    class="flex justify-center gap-2 bg-white p-4 font-semibold text-dark-grayish-blue sm:hidden"
   >
     <span
       :class="[
@@ -228,7 +264,9 @@ const replaceAction = (event: DragEvent, list: ActivityList[]) => {
     <span
       :class="[
         { 'text-primary-light-blue': actionToShow === 'Active' },
-        { 'hover:text-very-dark-desaturated-blue': actionToShow !== 'Active' },
+        {
+          'hover:text-very-dark-desaturated-blue': actionToShow !== 'Active',
+        },
       ]"
       @click="filterAction('Active')"
       >Active</span
