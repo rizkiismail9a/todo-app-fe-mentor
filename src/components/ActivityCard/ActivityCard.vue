@@ -17,7 +17,7 @@ const listKey = ref<number>(0);
       <!-- Form -->
       <CreateActivityForm @submit="listKey++" />
 
-      <ActivityList :key="listKey" />
+      <ActivityList :key="listKey" @refresh="listKey++" />
 
       <span class="text-center text-sm tracking-[0.24px] text-dark-grayish-blue"
         >Drag and drop to reorder list</span

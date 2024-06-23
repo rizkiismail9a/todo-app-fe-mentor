@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import ActivityServices from '@/services/activity.services';
 import { ActivityList, ActivityResponse } from '@/types/activity.types';
+import { nextTick } from 'process';
 import { onMounted, ref } from 'vue';
 
 type ActionType = 'All' | 'Active' | 'Completed';
@@ -8,6 +9,8 @@ type ActionType = 'All' | 'Active' | 'Completed';
 onMounted(() => {
   getActivityList();
 });
+
+const emits = defineEmits<{ refresh: [] }>();
 
 const toDoList = ref<ActivityList[]>([]);
 const actionToShow = ref<ActionType>('All');
@@ -91,12 +94,15 @@ const deleteAction = async (
       const doneAction = toDoList.value.filter(
         (item) => item.status === 'Done',
       );
-      doneAction.forEach(async (item) => {
-        await ActivityServices.deleteAction(item._id);
+      // Loop the id, not the list
+      const doneActionIds = doneAction.map((item) => item._id);
+      doneActionIds.forEach(async (id) => {
+        await ActivityServices.deleteAction(id);
       });
     }
 
     await getActivityList();
+    emits('refresh');
   } catch (error) {
     console.log(error);
   }
@@ -275,7 +281,9 @@ const drop = (event: TouchEvent, list: ActivityList[]) => {
           >Completed</span
         >
       </div>
-      <span @click="deleteAction(true)">Clear Completed</span>
+      <span @click="deleteAction(true)" class="cursor-pointer"
+        >Clear Completed</span
+      >
     </div>
   </div>
 
